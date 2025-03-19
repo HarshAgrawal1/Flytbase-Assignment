@@ -4,7 +4,7 @@
 A **real-time chat application** with **secure messaging, file sharing, and offline support**, built using **Node.js, Express, MongoDB, and Socket.io**.
 
 ---
-https://drive.google.com/file/d/1XkYbNhIpp7qpbgos-OOEDzKA6qQQOFtE/view?usp=sharing
+https://www.youtube.com/watch?v=V_84KxaF1UA
 
 ## **📌 Features**
 ✅ **Real-time Messaging** using **Socket.IO**  
