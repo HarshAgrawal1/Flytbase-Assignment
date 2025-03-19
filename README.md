@@ -39,6 +39,10 @@ or use nodemon for live updates:
 ```sh
 npm run dev
 ```
+## **Architecture**
+![image](https://github.com/user-attachments/assets/41de2645-fcb0-4c0e-86f3-f86d57e9af01)
+
+
 ## **📌 Technology Stack**
 **Backend**: Node.js, Express.js, MongoDB, WebSockets
 
@@ -49,7 +53,7 @@ npm run dev
 **File Uploads**: Multer
 
 
-## **📌 System Testing & Validation**
+## **📌 System Testing & Validation** 
 
 ✅ **Message Order Correction**
 
