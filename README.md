@@ -1,7 +1,10 @@
 # **FlytBase Chat Application**  
+
+# Supports all file formats included in the assignment; forgot to highlight this in the demo video - FOR EVALUATION.
 A **real-time chat application** with **secure messaging, file sharing, and offline support**, built using **Node.js, Express, MongoDB, and Socket.io**.
 
 ---
+https://drive.google.com/file/d/1XkYbNhIpp7qpbgos-OOEDzKA6qQQOFtE/view?usp=sharing
 
 ## **📌 Features**
 ✅ **Real-time Messaging** using **Socket.IO**  
