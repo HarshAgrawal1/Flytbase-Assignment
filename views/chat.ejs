@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* General Page Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f4f6f9;
+        }
+
+        /* Header */
+        .chat-header {
+            width: 100%;
+            background: #ffffff;
+            color: #333;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Chat Messages */
+        #chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fafafa;
+        }
+
+        /* Message Bubbles */
+        .message {
+            max-width: 50%;
+            padding: 12px;
+            border-radius: 18px;
+            font-size: 15px;
+            word-wrap: break-word;
+            display: inline-block;
+        }
+
+        .sent {
+            align-self: flex-end;
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 3px;
+        }
+
+        .received {
+            align-self: flex-start;
+            background: #e1e1e1;
+            color: #333;
+            border-bottom-left-radius: 3px;
+        }
+
+        /* Chat Input */
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #ddd;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+            background: #f1f1f1;
+        }
+
+        #sendButton {
+            margin-left: 10px;
+            padding: 12px 15px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.2s;
+        }
+
+        #sendButton:hover {
+            background-color: #0056b3;
+        }
+
+        /* Scrollbar Styling */
+        #chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background-color: #bbb;
+            border-radius: 10px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: #fafafa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-header">Chat Room</div>
+
+    <div id="chat-box"></div>
+
+    <!-- <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <button id="sendButton">➤</button>
+    </div> -->
+
+    <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <input type="file" id="fileInput" style="display: none;">
+        <button id="attachButton">📎</button>
+        <button id="sendButton">➤</button>
+    </div>
+    <script>
+        const socket = io();
+        const userId = "<%= userId %>";
+        const roomId = "<%= roomId %>";
+
+        const chatBox = document.getElementById("chat-box");
+        const fileInput = document.getElementById("fileInput");
+
+        // **Join the room to receive messages**
+        socket.emit("joinRoom", roomId);
+
+        // Handle text message sending
+        document.getElementById("sendButton").addEventListener("click", () => {
+            sendMessage();
+        });
+
+        document.getElementById("messageInput").addEventListener("keypress", (event) => {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value.trim();
+
+            if (message) {
+                socket.emit("chatMessage", { roomId, userId, message }, (response) => {
+                    if (!response.success) {
+                        console.error("Message delivery failed, retrying...");
+                        sendMessage(); // Retry sending
+                    }
+                });
+
+                messageInput.value = "";
+            }
+        }
+
+        // Handle file upload
+        document.getElementById("attachButton").addEventListener("click", () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("roomId", roomId);
+            formData.append("senderId", userId);
+
+            const response = await fetch("/send-file", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                socket.emit("fileMessage", data); // ✅ Notify other users in real-time
+            }
+        });
+
+        // ✅ **Load old messages when the page loads**
+        async function loadMessages() {
+            const response = await fetch(`/messages/${roomId}`);
+            const messages = await response.json();
+
+            messages.forEach(data => {
+                displayMessage(data);
+            });
+        }
+
+        // ✅ **Ensure displayMessage() is correct**
+        function displayMessage(data) {
+            const newMessage = document.createElement("div");
+            newMessage.classList.add("message", data.senderId === userId ? "sent" : "received");
+
+            if (data.type === "text") {
+                newMessage.textContent = data.message;
+            } else if (data.type === "file") {
+                const link = document.createElement("a");
+                link.href = data.fileUrl;
+                link.target = "_blank";
+
+                if (data.fileType === "image") {
+                    const img = document.createElement("img");
+                    img.src = data.fileUrl;
+                    img.style.maxWidth = "200px";
+                    img.style.borderRadius = "8px";
+                    link.appendChild(img);
+                } else {
+                    link.textContent = "📎 Download File";
+                }
+
+                newMessage.appendChild(link);
+            }
+
+            chatBox.appendChild(newMessage);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to latest message
+        }
+
+        // ✅ **Ensure real-time messages are received**
+        socket.on("message", displayMessage);
+        socket.on("fileMessage", displayMessage);
+
+        // Load past messages on page load
+        loadMessages();
+
+    </script>
+
+    <!-- <script>
+        const socket = io();
+        const userId = "<%= userId %>"; 
+        const roomId = "<%= roomId %>"; 
+
+        const chatBox = document.getElementById("chat-box");
+
+        // ✅ Load old messages from MongoDB
+        const oldMessages = JSON.parse('<%- JSON.stringify(old_messages || []) %>');
+
+        oldMessages.forEach((data) => {
+            const newMessage = document.createElement("div");
+            newMessage.classList.add("message", data.senderId === userId ? "sent" : "received");
+            newMessage.textContent = data.message;
+            chatBox.appendChild(newMessage);
+        });
+
+        // ✅ Auto-scroll to latest message
+        function scrollToBottom() {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        scrollToBottom();
+
+        // ✅ Join chat room
+        socket.emit("joinRoom", roomId);
+
+        // ✅ Listen for new messages
+        socket.on("message", (data) => {
+            const newMessage = document.createElement("div");
+            newMessage.classList.add("message", data.senderId === userId ? "sent" : "received");
+            newMessage.textContent = data.message;
+            chatBox.appendChild(newMessage);
+            scrollToBottom();
+        });
+
+        // ✅ Send message
+        document.getElementById("sendButton").addEventListener("click", () => {
+            sendMessage();
+        });
+
+        document.getElementById("messageInput").addEventListener("keypress", (event) => {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value.trim();
+            if (message) {
+                socket.emit("chatMessage", { roomId, userId, message });
+                messageInput.value = ""; // Clear input
+            }
+        }
+
+    </script> -->
+
+</body>
+
+</html>

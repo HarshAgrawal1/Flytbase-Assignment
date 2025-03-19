@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invite User</title>
+    <link rel="stylesheet" href="/css/invite.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Invite a User 📩</h2>
+
+        <% if (message) { %>
+            <p class="error-message">
+                <%= message %>
+            </p>
+            <% } %>
+
+                <form action="/invite-process" method="POST">
+                    <label for="phone">📞 Enter Phone Number:</label>
+                    <input type="text" name="phone" placeholder="Enter phone number" required>
+                    <button type="submit">Send Invite</button>
+                </form>
+
+                <a href="/" class="back-link">⬅️ Back to Home</a>
+    </div>
+
+</body>
+
+</html>

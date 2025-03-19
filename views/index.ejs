@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/index.css">
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="profile-card">
+      <h2>Welcome, <%= user.name %> 👋</h2>
+      <p><strong>Phone:</strong>
+        <%= user.phone %>
+      </p>
+    </div>
+
+    <div class="friends-section">
+      <h3>Your Connections</h3>
+      <% if (friends.length> 0) { %>
+        <ul class="friend-list">
+          <% friends.forEach(friend=> { %>
+            <li>
+              <div class="friend-item">
+                <span class="friend-name">
+                  <%= friend.name %>
+                </span>
+                <form action="/chat/<%= [user._id, friend._id].sort().join('_') %>" method="GET">
+                  <button type="submit" class="chat-btn">Chat</button>
+                </form>
+              </div>
+            </li>
+            <% }); %>
+        </ul>
+        <% } else { %>
+          <p class="no-friends">You have no connections yet.</p>
+          <% } %>
+    </div>
+
+    <a href="/invite" class="invite-btn">Invite a Friend</a>
+  </div>
+
+</body>
+
+</html>
